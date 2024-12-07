@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage x:Class="DisplayDeviceLocation.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
+             xmlns:local="clr-namespace:DisplayDeviceLocation">
+
+    <ContentPage.Resources>
+        <local:MapViewModel x:Key="MapViewModel" />
+    </ContentPage.Resources>
+
+    <Grid>
+
+        <esri:MapView x:Name="MainMapView" Map="{Binding Map, Source={StaticResource MapViewModel}}" />
+
+    </Grid>
+
+</ContentPage>
+
