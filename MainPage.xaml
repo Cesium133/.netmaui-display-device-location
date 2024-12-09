@@ -10,7 +10,7 @@
         <local:MapViewModel x:Key="MapViewModel" />
     </ContentPage.Resources>
 
-    <Grid>
+    <Grid >
 
         <esri:MapView x:Name="MainMapView" Map="{Binding Map, Source={StaticResource MapViewModel}}" />
 

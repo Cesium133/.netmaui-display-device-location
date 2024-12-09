@@ -32,6 +32,7 @@ public static class MauiProgram
 
 		builder.UseArcGISRuntime(config => config.UseApiKey(""));
 
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

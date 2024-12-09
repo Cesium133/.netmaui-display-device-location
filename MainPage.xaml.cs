@@ -17,6 +17,7 @@ using Esri.ArcGISRuntime.Location;
 using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.UI;
 using System.ComponentModel;
+using Geolocation = Microsoft.Maui.Devices.Sensors.Geolocation;
 
 
 public partial class MainPage : ContentPage
@@ -37,6 +38,10 @@ public partial class MainPage : ContentPage
     // Track previous location to ensure the route line appears behind the animating location symbol.
     private MapPoint _lastPosition;
 
+    private bool trackingOn = false;
+
+    private SystemLocationDataSource locationDataSource = new();
+
     public MainPage()
     {
         InitializeComponent();
@@ -49,6 +54,7 @@ public partial class MainPage : ContentPage
                 _ = DisplayDeviceLocationAsync();
             }
         };
+
 
         // Create and add graphics overlay for displaying the trail.
         _locationHistoryLineOverlay = new GraphicsOverlay();
@@ -65,12 +71,13 @@ public partial class MainPage : ContentPage
         // Create the polyline builder.
         _polylineBuilder = new PolylineBuilder(SpatialReferences.WebMercator);
 
+
     }
+
 
 
     private async Task DisplayDeviceLocationAsync()
     {
-        SystemLocationDataSource locationDataSource = new();
 
         PermissionStatus status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Denied || status == PermissionStatus.Unknown)
@@ -83,6 +90,18 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        //Microsoft.Maui.Devices.Sensors.Location location = await Geolocation.GetLocationAsync(new GeolocationRequest
+        //{
+        //    DesiredAccuracy = GeolocationAccuracy.High,
+        //    RequestFullAccuracy = true,
+        //    Timeout = TimeSpan.FromSeconds(2)
+        //});
+
+        //Geolocation.LocationChanged += async (sender,e) => await GeolocationChanged(sender, e);
+
+
+
+
         await locationDataSource.StartAsync();
 
         if (locationDataSource.Status == LocationDataSourceStatus.Started)
@@ -93,20 +112,26 @@ public partial class MainPage : ContentPage
             MainMapView.LocationDisplay.AutoPanMode = LocationDisplayAutoPanMode.Recenter;
         }
 
-        locationDataSource.LocationChanged += LocationChanged;
+        locationDataSource.LocationChanged += async (sender, e) => await LocationChanged(sender, e);
+
 
     }
 
-    private async void LocationChanged(object sender, Esri.ArcGISRuntime.Location.Location e)
+
+    private async Task LocationChanged(object sender, Esri.ArcGISRuntime.Location.Location e)
     {
-        _locationHistoryLineOverlay.Graphics.Clear();
-        MapPoint mp = (MapPoint)GeometryEngine.Project(e.Position, SpatialReferences.WebMercator);
-        if (mp != null)
-        {
-            _polylineBuilder.AddPoint(mp);
-           _locationHistoryOverlay.Graphics.Add(new Graphic(mp));
-            _locationHistoryLineOverlay.Graphics.Add(new Graphic(_polylineBuilder.ToGeometry()));
-        }
+        await Task.Run(() => { 
+            _locationHistoryLineOverlay.Graphics.Clear();
+            MapPoint mp = (MapPoint)GeometryEngine.Project(e.Position, SpatialReferences.WebMercator);
+            if (mp != null)
+            {
+                MainThread.BeginInvokeOnMainThread(() => { 
+                    _polylineBuilder.AddPoint(mp);
+                    _locationHistoryOverlay.Graphics.Add(new Graphic(mp));
+                    _locationHistoryLineOverlay.Graphics.Add(new Graphic(_polylineBuilder.ToGeometry()));
+                });
+            }
+        });
 
     }
 
